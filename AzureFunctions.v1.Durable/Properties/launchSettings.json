@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "AzureFunctions.Durable.v1": {
+      "commandName": "Project"
+    }
+  }
+}
