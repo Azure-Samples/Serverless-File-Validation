@@ -1,0 +1,227 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_FileValidation_BatchReceiver_name": {
+            "defaultValue": "FileValidation-BatchReceiver",
+            "type": "String"
+        },
+        "workflows_FileValidation_BatchProcessor_name": {
+            "defaultValue": "FileValidation-BatchProcessor",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Generalized from resource: '/subscriptions/0c249eea-065b-4034-955e-795d56b1e5d1/resourceGroups/serverless-demo-test/providers/Microsoft.Logic/workflows/FileValidation-BatchProcessor'.",
+            "type": "Microsoft.Logic/workflows",
+            "name": "[parameters('workflows_FileValidation_BatchProcessor_name')]",
+            "apiVersion": "2017-07-01",
+            "location": "westus2",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "EventGrid",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {}
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "BatchReceiver_2": {
+                            "runAfter": {
+                                "Partition": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SendToBatch",
+                            "inputs": {
+                                "batchName": "BatchReciever",
+                                "content": "@outputs('Compose')",
+                                "host": {
+                                    "triggerName": "Batch_messages",
+                                    "workflow": {
+                                        "id": "[resourceId('Microsoft.Logic/workflows', parameters('workflows_FileValidation_BatchReceiver_name'))]"
+                                    }
+                                },
+                                "partitionName": "@{outputs('Partition')}"
+                            }
+                        },
+                        "Compose": {
+                            "runAfter": {
+                                "Parse_JSON": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose",
+                            "inputs": "@body('Parse_JSON')[0]?['data']['url']"
+                        },
+                        "Parse_JSON": {
+                            "runAfter": {},
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@triggerBody()",
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "data": {
+                                                "properties": {
+                                                    "api": {
+                                                        "type": "string"
+                                                    },
+                                                    "blobType": {
+                                                        "type": "string"
+                                                    },
+                                                    "clientRequestId": {
+                                                        "type": "string"
+                                                    },
+                                                    "contentLength": {
+                                                        "type": "number"
+                                                    },
+                                                    "contentType": {
+                                                        "type": "string"
+                                                    },
+                                                    "eTag": {
+                                                        "type": "string"
+                                                    },
+                                                    "requestId": {
+                                                        "type": "string"
+                                                    },
+                                                    "sequencer": {
+                                                        "type": "string"
+                                                    },
+                                                    "storageDiagnostics": {
+                                                        "properties": {
+                                                            "batchId": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "url": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "dataVersion": {
+                                                "type": "string"
+                                            },
+                                            "eventTime": {
+                                                "type": "string"
+                                            },
+                                            "eventType": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "metadataVersion": {
+                                                "type": "string"
+                                            },
+                                            "subject": {
+                                                "type": "string"
+                                            },
+                                            "topic": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "topic",
+                                            "subject",
+                                            "eventType",
+                                            "eventTime",
+                                            "id",
+                                            "data",
+                                            "dataVersion",
+                                            "metadataVersion"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "Partition": {
+                            "runAfter": {
+                                "Compose": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose",
+                            "inputs": "@substring(outputs('Compose'), 50, 14)"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Logic/workflows', parameters('workflows_FileValidation_BatchReceiver_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/0c249eea-065b-4034-955e-795d56b1e5d1/resourceGroups/serverless-demo-test/providers/Microsoft.Logic/workflows/FileValidation-BatchReceiver'.",
+            "type": "Microsoft.Logic/workflows",
+            "name": "[parameters('workflows_FileValidation_BatchReceiver_name')]",
+            "apiVersion": "2017-07-01",
+            "location": "westus2",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "Batch_messages": {
+                            "type": "Batch",
+                            "inputs": {
+                                "configurations": {
+                                    "BatchReciever": {
+                                        "releaseCriteria": {
+                                            "messageCount": 3
+                                        }
+                                    }
+                                },
+                                "mode": "Inline"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "For_each": {
+                            "foreach": "@triggerBody()['items']",
+                            "actions": {
+                                "Change_to_run_validation_on_each_item's_content": {
+                                    "runAfter": {},
+                                    "type": "Compose",
+                                    "inputs": "@items('For_each')['content']"
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "Foreach"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            },
+            "dependsOn": []
+        }
+    ]
+}
