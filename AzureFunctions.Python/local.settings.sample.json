@@ -1,0 +1,10 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+      "AzureWebJobsStorage": "<connection-string>",
+      "DataStorage": "<connection-string>",
+      "DataContainer": "data",
+      "DataSubpath": "subpath",
+      "FUNCTIONS_WORKER_RUNTIME": "python"
+    }
+}
