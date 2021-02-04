@@ -1,0 +1,17 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "mytimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 */1 * * * *"
+    }, 
+    {
+      "name": "myqueue",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "batches"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 page_type: sample
 languages:
   - csharp
+  - python
 products:
   - azure
   - azure-blob-storage
@@ -40,6 +41,8 @@ To accomplish this sample, you'll need to set up a few things:
 1. Visual Studio 2017 v15.5.4+ with the **Azure Workload** installed.
 1. The *Azure Functions and Web Jobs Tools* extension to VS, version 15.0.40108+
 1. <a href="https://azure.microsoft.com/en-us/features/storage-explorer/" target="_blank">Azure Storage Explorer</a> (makes testing easier)
+
+For the Python version of this sample (folder `AzureFunctions.Python`), follow the instructions in its dedicated [readme](/AzureFunctions.Python/README.md).
 
 ## Execution
 
