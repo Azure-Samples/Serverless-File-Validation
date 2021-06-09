@@ -1,27 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\AzureFunctions.v2\CustomerBlobAttributes.cs" Link="CustomerBlobAttributes.cs" />
     <Compile Include="..\AzureFunctions.v2\Extensions.cs" Link="Extensions.cs" />
     <Compile Include="..\AzureFunctions.v2\Helpers.cs" Link="Helpers.cs" />
-    <Compile Include="..\AzureFunctions.v2\LockTableEntity.cs" Link="LockTableEntity.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\AzureFunctions.v2\local.settings.json" Link="local.settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.0.0" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.29" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 </Project>
