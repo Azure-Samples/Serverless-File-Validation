@@ -52,20 +52,7 @@ For the Python version of this sample (folder `AzureFunctions.Python`), follow t
 
 Pull down the code.
 
-Create a new file in the `AzureFunctions.v2` **project** called `local.settings.json` with the following content:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "<general purpose storage connection string>",
-    "AzureWebJobsDashboard": "<general purpose storage connection string>",
-
-    "CustomerBlobStorage": "<blob storage connection string>",
-    "ValidateFunctionUrl": "http://localhost:7071/api/Validate"
-  }
-}
-```
+Copy `sample.local.settings.json` in the `AzureFunctions.v2` **project** to a new file called `local.settings.json`.
 
 This file will be used across the functions, durable or otherwise.
 
