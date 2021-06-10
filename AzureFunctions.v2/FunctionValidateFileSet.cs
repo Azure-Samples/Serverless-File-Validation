@@ -18,7 +18,7 @@ namespace FileValidation
     public static class FunctionValidateFileSet
     {
         [FunctionName(@"ValidateFileSet")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post", Route = @"Validate")]HttpRequestMessage req, ILogger log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post", Route = @"Validate")] HttpRequestMessage req, ILogger log)
         {
             log.LogTrace(@"ValidateFileSet run.");
             if (!CloudStorageAccount.TryParse(Environment.GetEnvironmentVariable(@"CustomerBlobStorage"), out var storageAccount))
@@ -161,10 +161,6 @@ namespace FileValidation
                     .GetDirectoryReference($@"{folderName}")
                     .GetBlockBlobReference(Path.GetFileName(blobRef.Name));
 
-                string sourceLeaseGuid = Guid.NewGuid().ToString(), targetLeaseGuid = Guid.NewGuid().ToString();
-                var sourceLeaseId = await sourceBlob.AcquireLeaseAsync(TimeSpan.FromSeconds(60), sourceLeaseGuid);
-                var targetLeaseId = await targetBlob.AcquireLeaseAsync(TimeSpan.FromSeconds(60), targetLeaseGuid);
-
                 await targetBlob.StartCopyAsync(sourceBlob);
 
                 while (targetBlob.CopyState.Status == CopyStatus.Pending)
@@ -205,9 +201,6 @@ namespace FileValidation
                         log.LogError($@"Error deleting blob {sourceBlob.Name}", ex);
                     }
 #endif
-
-                    await targetBlob.ReleaseLeaseAsync(new AccessCondition { LeaseId = targetLeaseId });
-                    await sourceBlob.ReleaseLeaseAsync(new AccessCondition { LeaseId = sourceLeaseId });
                 }
             }
         }

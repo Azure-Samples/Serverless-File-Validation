@@ -9,6 +9,7 @@
     <Compile Include="..\AzureFunctions.v2\Helpers.cs" Link="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.EventGrid" Version="3.2.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
   </ItemGroup>

@@ -5,41 +5,37 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace FileValidation
 {
     public static class FunctionEnsureAllFiles
     {
         [FunctionName("EnsureAllFiles")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post")]HttpRequestMessage req, ILogger log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post")] HttpRequestMessage req, ILogger log)
         {
-            var payloadFromEventGrid = JToken.ReadFrom(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
-            dynamic eventGridSoleItem = (payloadFromEventGrid as JArray)?.SingleOrDefault();
+            var events = await req.Content.ReadAsAsync<EventGridEvent[]>();
+            var eventGridSoleItem = events?.SingleOrDefault();
             if (eventGridSoleItem == null)
             {
                 return req.CreateErrorResponse(HttpStatusCode.BadRequest, $@"Expecting only one item in the Event Grid message");
             }
 
-            if (eventGridSoleItem.eventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
+            if (eventGridSoleItem.EventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
             {
                 log.LogTrace(@"Event Grid Validation event received.");
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent($"{{ \"validationResponse\" : \"{((dynamic)payloadFromEventGrid)[0].data.validationCode}\" }}")
-                };
+                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)eventGridSoleItem.Data).validationCode}\" }}");
             }
 
             var newCustomerFile = Helpers.ParseEventGridPayload(eventGridSoleItem, log);
             if (newCustomerFile == null)
             {   // The request either wasn't valid (filename couldn't be parsed) or not applicable (put in to a folder other than /inbound)
-                return req.CreateResponse(System.Net.HttpStatusCode.NoContent);
+                return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
             }
 
             // get the prefix for the name so we can check for others in the same container with in the customer blob storage account
@@ -65,7 +61,7 @@ namespace FileValidation
                 if (entriesMatchingPrefix != null)
                 {
                     log.LogInformation($@"Skipping. We've already queued the batch with prefix '{prefix}' for processing");
-                    return req.CreateResponse(HttpStatusCode.NoContent);
+                    return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
                 }
 
                 log.LogInformation(@"Got all the files! Moving on...");
@@ -76,7 +72,7 @@ namespace FileValidation
                 catch (StorageException)
                 {
                     log.LogInformation($@"Skipping. We've already queued the batch with prefix '{prefix}' for processing");
-                    return req.CreateResponse(HttpStatusCode.NoContent);
+                    return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
                 }
 
                 using (var c = new HttpClient())
@@ -91,14 +87,14 @@ $@"{{
                     // call next step in functions with the prefix so it knows what to go grab
                     await c.PostAsync($@"{Environment.GetEnvironmentVariable(@"ValidateFunctionUrl")}", new StringContent(jsonObjectForValidator));
 
-                    return req.CreateResponse(HttpStatusCode.OK);
+                    return req.CreateCompatibleResponse(HttpStatusCode.OK);
                 }
             }
             else
             {
                 log.LogInformation($@"Still waiting for more files... Have {matches.Count()} file(s) from this customer ({newCustomerFile.CustomerName}) for batch {newCustomerFile.BatchPrefix}. Still need {string.Join(", ", filesStillWaitingFor)}");
 
-                return req.CreateResponse(HttpStatusCode.NoContent);
+                return req.CreateCompatibleResponse(HttpStatusCode.Accepted);
             }
         }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -50,25 +51,28 @@ namespace FileValidation
             return customerFilesTable;
         }
 
-        public static CustomerBlobAttributes ParseEventGridPayload(dynamic eventGridItem, ILogger log)
+        public static CustomerBlobAttributes ParseEventGridPayload(EventGridEvent eventGridItem, ILogger log)
         {
-            if (eventGridItem.eventType == @"Microsoft.Storage.BlobCreated"
-                && eventGridItem.data.api == @"PutBlob"
-                && eventGridItem.data.contentType == @"text/csv")
+            if (eventGridItem.EventType == @"Microsoft.Storage.BlobCreated")
             {
-                try
+                var egData = (dynamic)eventGridItem.Data;
+                if (egData.api == @"PutBlob"
+                    && egData.url.ToString().EndsWith(".csv"))
                 {
-                    var retVal = CustomerBlobAttributes.Parse((string)eventGridItem.data.url);
-                    if (retVal != null && !retVal.ContainerName.Equals(retVal.CustomerName))
+                    try
                     {
-                        throw new ArgumentException($@"File '{retVal.Filename}' uploaded to container '{retVal.ContainerName}' doesn't have the right prefix: the first token in the filename ({retVal.CustomerName}) must be the customer name, which should match the container name", nameof(eventGridItem));
-                    }
+                        var retVal = CustomerBlobAttributes.Parse((string)egData.url);
+                        if (retVal != null && !retVal.ContainerName.Equals(retVal.CustomerName))
+                        {
+                            throw new ArgumentException($@"File '{retVal.Filename}' uploaded to container '{retVal.ContainerName}' doesn't have the right prefix: the first token in the filename ({retVal.CustomerName}) must be the customer name, which should match the container name", nameof(eventGridItem));
+                        }
 
-                    return retVal;
-                }
-                catch (Exception ex)
-                {
-                    log.LogError(@"Error parsing Event Grid payload", ex);
+                        return retVal;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(@"Error parsing Event Grid payload", ex);
+                    }
                 }
             }
 
