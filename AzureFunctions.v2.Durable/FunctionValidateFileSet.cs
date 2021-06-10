@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -10,11 +11,7 @@ namespace FileValidation
     public static class FunctionValidateFileSet
     {
         [FunctionName(@"ValidateFileSet")]
-#if FUNCTIONS_V1
-        public static async Task<bool> Run([ActivityTrigger]DurableActivityContext context, ILogger log)
-#else
-        public static async Task<bool> Run([ActivityTrigger]IDurableActivityContext context, ILogger log)
-#endif
+        public static async Task<bool> Run([ActivityTrigger] FilesetValidationRequest payload, ILogger log)
         {
             log.LogTrace(@"ValidateFileSet run.");
             if (!CloudStorageAccount.TryParse(Environment.GetEnvironmentVariable(@"CustomerBlobStorage"), out _))
@@ -22,10 +19,18 @@ namespace FileValidation
                 throw new Exception(@"Can't create a storage account accessor from app setting connection string, sorry!");
             }
 
-            var payload = context.GetInputAsJson();
-            var prefix = payload["prefix"].ToString(); // This is the entire path w/ prefix for the file set
+            var prefix = payload.Prefix; // This is the entire path w/ prefix for the file set
 
             return await Helpers.DoValidationAsync(prefix, log);
         }
+
     }
+
+    public class FilesetValidationRequest
+    {
+        public string Prefix { get; set; }
+
+        public IEnumerable<string> ExpectedFiles { get; set; }
+    }
+
 }

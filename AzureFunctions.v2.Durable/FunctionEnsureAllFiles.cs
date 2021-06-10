@@ -14,7 +14,7 @@ namespace FileValidation
 #if FUNCTIONS_V1
         public static async Task Run([OrchestrationTrigger]DurableOrchestrationContext context, ILogger log)
 #else
-        public static async Task Run([OrchestrationTrigger]IDurableOrchestrationContext context, ILogger log)
+        public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
 #endif
         {
             if (!context.IsReplaying)
@@ -56,7 +56,7 @@ namespace FileValidation
             context.Log(log, @"Got all the files! Moving on...");
 
             // call next step in functions with the prefix so it knows what to go grab
-            await context.CallActivityAsync(@"ValidateFileSet", new { prefix = $@"{newCustomerFile.ContainerName}/inbound/{newCustomerFile.BatchPrefix}", fileTypes = expectedFiles });
+            await context.CallActivityAsync(@"ValidateFileSet", new FilesetValidationRequest { Prefix = $@"{newCustomerFile.ContainerName}/inbound/{newCustomerFile.BatchPrefix}", ExpectedFiles = expectedFiles });
         }
 
         class BlobFilenameVsDatabaseFileMaskComparer : IEqualityComparer<string>
