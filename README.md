@@ -42,8 +42,7 @@ To accomplish this sample, you'll need to set up a few things:
     * For the customer files to be uploaded in to
 1. Azure Event Grid (with Storage Events)
 1. ngrok to enable local Azure Function triggering from Event Grid (see <a href="https://blogs.msdn.microsoft.com/brandonh/2017/11/30/locally-debugging-an-azure-function-triggered-by-azure-event-grid/" target="_blank">this blog post</a> for more)
-1. Visual Studio 2019
-1. The *Azure Functions and Web Jobs Tools* extension to Visual Studio
+1. [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 1. <a href="https://azure.microsoft.com/en-us/features/storage-explorer/" target="_blank">Azure Storage Explorer</a> (makes testing easier)
 
 For the Python version of this sample (folder `AzureFunctions.Python`), follow the instructions in its dedicated [readme](/AzureFunctions.Python/README.md).
@@ -52,14 +51,17 @@ For the Python version of this sample (folder `AzureFunctions.Python`), follow t
 
 Pull down the code.
 
-Copy `sample.local.settings.json` in the `AzureFunctions.v2` **project** to a new file called `local.settings.json`.
+Copy `sample.local.settings.json` in the `AzureFunctions.v3` **project** to a new file called `local.settings.json`.
 
 This file will be used across the functions, durable or otherwise.
 
-Next, run any of the Function apps in this solution. You can use the v1 (.Net Framework) or the v2 (.Net Core) version, it's only needed for Event Grid validation.
-With the function running, add an Event Grid Subscription to the Blob Storage account (from step 2), pointing to the ngrok-piped endpoint you created in step 4. The URL should look something like this: `https://b3252cc3.ngrok.io/api/Orchestrator`
+Next, run any of the Function apps in this solution. You can use the v1 (.Net Framework) or the v3 (.Net Core) version, it's only needed for Event Grid validation.
+With the function running, add an Event Grid Subscription to the Blob Storage account (from step 2), pointing to the ngrok-piped endpoint you created in step 4. The URL should look something like this:
 
-![An Event Grid subscription set up to target an ngrok endpoint](https://brandonhmsdnblog.blob.core.windows.net/images/2018/01/17/s2018-01-17_14-59-32.png)
+* Normal Functions: `https://b3252cc3.ngrok.io/api/EnsureAllFiles`
+* Durable Functions: `https://b3252cc3.ngrok.io/api/Orchestrator`
+
+![An Event Grid subscription set up to target an ngrok endpoint](images/ngroksubscription.png)
 
 Upon saving this subscription, you'll see your locally-running Function get hit with a request and return HTTP OK, then the Subscription will go green in Azure and you're set.
 
@@ -67,7 +69,7 @@ Now, open Azure Storage Explorer and connect to the *Blob* Storage Account you'v
 
 Take one of the `.csv` files from the `sampledata` folder of this repo, and drop it in to the inbound folder.
 
-If you're using one of the Durable functions, you should see your local function's `/api/Orchestrator` endpoint get hit.
+You'll see the endpoint you defined as your Event Grid webhook subscription get hit.
 
 ### Durable Function Execution
 
