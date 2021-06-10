@@ -4,13 +4,13 @@
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\AzureFunctions.v2\CustomerBlobAttributes.cs" Link="CustomerBlobAttributes.cs" />
-    <Compile Include="..\AzureFunctions.v2\Extensions.cs" Link="Extensions.cs" />
-    <Compile Include="..\AzureFunctions.v2\Helpers.cs" Link="Helpers.cs" />
-    <Compile Include="..\AzureFunctions.v2\LockTableEntity.cs" Link="LockTableEntity.cs" />
+    <Compile Include="..\AzureFunctions.v3\CustomerBlobAttributes.cs" Link="CustomerBlobAttributes.cs" />
+    <Compile Include="..\AzureFunctions.v3\Extensions.cs" Link="Extensions.cs" />
+    <Compile Include="..\AzureFunctions.v3\Helpers.cs" Link="Helpers.cs" />
+    <Compile Include="..\AzureFunctions.v3\LockTableEntity.cs" Link="LockTableEntity.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\AzureFunctions.v2\local.settings.json" Link="local.settings.json">
+    <None Include="..\AzureFunctions.v3\local.settings.json" Link="local.settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
