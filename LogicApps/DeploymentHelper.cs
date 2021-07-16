@@ -5,7 +5,6 @@
   
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
-using Microsoft.Rest.Azure.Authentication;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
