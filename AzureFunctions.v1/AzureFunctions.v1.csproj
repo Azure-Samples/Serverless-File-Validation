@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net471</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\AzureFunctions.v3\CustomerBlobAttributes.cs" Link="CustomerBlobAttributes.cs" />

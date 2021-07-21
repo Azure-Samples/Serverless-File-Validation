@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -6,6 +7,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace FileValidation
 {
@@ -14,7 +16,8 @@ namespace FileValidation
         [FunctionName("Orchestrator")]
         public static async System.Threading.Tasks.Task<HttpResponseMessage> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequestMessage req, [DurableClient] IDurableClient starter, ILogger log)
         {
-            var events = await req.Content.ReadAsAsync<EventGridEvent[]>();
+            var reader = await req.Content.ReadAsStringAsync();
+            var events = EventGridEvent.ParseMany(BinaryData.FromString(reader));
             var eventGridSoleItem = events?.SingleOrDefault();
             if (eventGridSoleItem == null)
             {
@@ -24,7 +27,7 @@ namespace FileValidation
             if (eventGridSoleItem.EventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
             {
                 log.LogTrace(@"Event Grid Validation event received.");
-                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)eventGridSoleItem.Data).validationCode}\" }}");
+                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)JsonConvert.DeserializeObject(eventGridSoleItem.Data.ToString())).validationCode}\" }}");
             }
 
             CustomerBlobAttributes newCustomerFile = Helpers.ParseEventGridPayload(eventGridSoleItem, log);

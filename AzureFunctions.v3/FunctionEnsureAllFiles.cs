@@ -11,6 +11,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 
 namespace FileValidation
 {
@@ -19,7 +20,8 @@ namespace FileValidation
         [FunctionName("EnsureAllFiles")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post")] HttpRequestMessage req, ILogger log)
         {
-            var events = await req.Content.ReadAsAsync<EventGridEvent[]>();
+            var reader = await req.Content.ReadAsStringAsync();
+            var events = EventGridEvent.ParseMany(BinaryData.FromString(reader));
             var eventGridSoleItem = events?.SingleOrDefault();
             if (eventGridSoleItem == null)
             {
@@ -29,7 +31,7 @@ namespace FileValidation
             if (eventGridSoleItem.EventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
             {
                 log.LogTrace(@"Event Grid Validation event received.");
-                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)eventGridSoleItem.Data).validationCode}\" }}");
+                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)JsonConvert.DeserializeObject(eventGridSoleItem.Data.ToString())).validationCode}\" }}");
             }
 
             var newCustomerFile = Helpers.ParseEventGridPayload(eventGridSoleItem, log);
