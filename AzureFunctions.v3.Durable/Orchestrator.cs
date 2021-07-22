@@ -16,22 +16,22 @@ namespace FileValidation
         public static async System.Threading.Tasks.Task<HttpResponseMessage> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequestMessage req, [DurableClient] IDurableClient starter, ILogger log)
         {
             var reader = await req.Content.ReadAsStringAsync();
-            var events = EventGridEvent.Parse(BinaryData.FromString(reader));
-            if (events == null)
+            var evt = EventGridEvent.Parse(BinaryData.FromString(reader));
+            if (evt == null)
             {
                 return req.CreateCompatibleResponse(HttpStatusCode.BadRequest, @"Expecting only one item in the Event Grid message");
             }
 
-            if (events.TryGetSystemEventData(out object eventData))
+            if (evt.TryGetSystemEventData(out object eventData))
             {
                 if (eventData is SubscriptionValidationEventData subscriptionValidationEventData)
                 {
                     log.LogTrace(@"Event Grid Validation event received.");
-                    return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)subscriptionValidationEventData).ValidationCode}\" }}");
+                    return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{subscriptionValidationEventData.ValidationCode}\" }}");
                 }
             }
 
-            CustomerBlobAttributes newCustomerFile = Helpers.ParseEventGridPayload(events, log);
+            CustomerBlobAttributes newCustomerFile = Helpers.ParseEventGridPayload(evt, log);
             if (newCustomerFile == null)
             {   // The request either wasn't valid (filename couldn't be parsed) or not applicable (put in to a folder other than /inbound)
                 return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
@@ -47,7 +47,7 @@ namespace FileValidation
             if (instanceForPrefix == null)
             {
                 log.LogTrace($@"New instance needed for prefix '{prefix}'. Starting...");
-                var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, events);
+                var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, evt);
                 log.LogTrace($@"Started. {retval}");
             }
             else
@@ -62,7 +62,7 @@ namespace FileValidation
                         await starter.TerminateAsync(prefix, @"bounce");
                     }
 
-                    var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, events);
+                    var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, evt);
                     log.LogTrace($@"Restarted listener for {prefix}. {retval}");
                 }
                 else
