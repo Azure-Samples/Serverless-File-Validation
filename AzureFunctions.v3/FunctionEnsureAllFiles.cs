@@ -6,12 +6,12 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
+using Azure.Messaging.EventGrid.SystemEvents;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
 
 namespace FileValidation
 {
@@ -21,20 +21,22 @@ namespace FileValidation
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, @"post")] HttpRequestMessage req, ILogger log)
         {
             var reader = await req.Content.ReadAsStringAsync();
-            var events = EventGridEvent.ParseMany(BinaryData.FromString(reader));
-            var eventGridSoleItem = events?.SingleOrDefault();
-            if (eventGridSoleItem == null)
+            var events = EventGridEvent.Parse(BinaryData.FromString(reader));
+            if (events == null)
             {
                 return req.CreateErrorResponse(HttpStatusCode.BadRequest, $@"Expecting only one item in the Event Grid message");
             }
 
-            if (eventGridSoleItem.EventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
+            if (events.TryGetSystemEventData(out object eventData))
             {
-                log.LogTrace(@"Event Grid Validation event received.");
-                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)JsonConvert.DeserializeObject(eventGridSoleItem.Data.ToString())).validationCode}\" }}");
+                if (eventData is SubscriptionValidationEventData subscriptionValidationEventData)
+                {
+                    log.LogTrace(@"Event Grid Validation event received.");
+                    return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)subscriptionValidationEventData).ValidationCode}\" }}");
+                }
             }
 
-            var newCustomerFile = Helpers.ParseEventGridPayload(eventGridSoleItem, log);
+            var newCustomerFile = Helpers.ParseEventGridPayload(events, log);
             if (newCustomerFile == null)
             {   // The request either wasn't valid (filename couldn't be parsed) or not applicable (put in to a folder other than /inbound)
                 return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
