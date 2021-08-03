@@ -1,7 +1,8 @@
-using System.Linq;
+using System;
 using System.Net;
 using System.Net.Http;
-using Microsoft.Azure.EventGrid.Models;
+using Azure.Messaging.EventGrid;
+using Azure.Messaging.EventGrid.SystemEvents;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -14,20 +15,23 @@ namespace FileValidation
         [FunctionName("Orchestrator")]
         public static async System.Threading.Tasks.Task<HttpResponseMessage> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequestMessage req, [DurableClient] IDurableClient starter, ILogger log)
         {
-            var events = await req.Content.ReadAsAsync<EventGridEvent[]>();
-            var eventGridSoleItem = events?.SingleOrDefault();
-            if (eventGridSoleItem == null)
+            var reader = await req.Content.ReadAsStringAsync();
+            var evt = EventGridEvent.Parse(BinaryData.FromString(reader));
+            if (evt == null)
             {
                 return req.CreateCompatibleResponse(HttpStatusCode.BadRequest, @"Expecting only one item in the Event Grid message");
             }
 
-            if (eventGridSoleItem.EventType == @"Microsoft.EventGrid.SubscriptionValidationEvent")
+            if (evt.TryGetSystemEventData(out object eventData))
             {
-                log.LogTrace(@"Event Grid Validation event received.");
-                return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{((dynamic)eventGridSoleItem.Data).validationCode}\" }}");
+                if (eventData is SubscriptionValidationEventData subscriptionValidationEventData)
+                {
+                    log.LogTrace(@"Event Grid Validation event received.");
+                    return req.CreateCompatibleResponse(HttpStatusCode.OK, $"{{ \"validationResponse\" : \"{subscriptionValidationEventData.ValidationCode}\" }}");
+                }
             }
 
-            CustomerBlobAttributes newCustomerFile = Helpers.ParseEventGridPayload(eventGridSoleItem, log);
+            CustomerBlobAttributes newCustomerFile = Helpers.ParseEventGridPayload(evt, log);
             if (newCustomerFile == null)
             {   // The request either wasn't valid (filename couldn't be parsed) or not applicable (put in to a folder other than /inbound)
                 return req.CreateCompatibleResponse(HttpStatusCode.NoContent);
@@ -43,7 +47,7 @@ namespace FileValidation
             if (instanceForPrefix == null)
             {
                 log.LogTrace($@"New instance needed for prefix '{prefix}'. Starting...");
-                var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, eventGridSoleItem);
+                var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, evt);
                 log.LogTrace($@"Started. {retval}");
             }
             else
@@ -58,7 +62,7 @@ namespace FileValidation
                         await starter.TerminateAsync(prefix, @"bounce");
                     }
 
-                    var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, eventGridSoleItem);
+                    var retval = await starter.StartNewAsync(@"EnsureAllFiles", prefix, evt);
                     log.LogTrace($@"Restarted listener for {prefix}. {retval}");
                 }
                 else
