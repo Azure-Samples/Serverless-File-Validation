@@ -12,8 +12,6 @@ products:
   - azure-storage
   - azure-table-storage
   - dotnet
-  - dotnet-core
-  - dotnet-standard
 description: This sample outlines ways to accomplish validation across files received in a batch format using Azure Serverless technologies.
 ---
 
