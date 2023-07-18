@@ -39,7 +39,7 @@ To accomplish this sample, you'll need to set up a few things:
 1. Azure Blob Storage
     * For the customer files to be uploaded in to
 1. Azure Event Grid (with Storage Events)
-1. ngrok to enable local Azure Function triggering from Event Grid (see <a href="https://blogs.msdn.microsoft.com/brandonh/2017/11/30/locally-debugging-an-azure-function-triggered-by-azure-event-grid/" target="_blank">this blog post</a> for more)
+1. ngrok to enable local Azure Function triggering from Event Grid (see <a href="https://docs.microsoft.com/en-us/azure/azure-functions/functions-debug-event-grid-trigger-local" target="_blank">this blog post</a> for more)
 1. [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 1. <a href="https://azure.microsoft.com/en-us/features/storage-explorer/" target="_blank">Azure Storage Explorer</a> (makes testing easier)
 
